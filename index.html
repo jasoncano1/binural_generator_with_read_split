@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brainwave Binaural Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.37/Tone.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9fafb;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+        
+        /* Speech Panel Styles */
+        .speech-panel {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #f8fafc;
+        }
+        
+        .speech-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        
+        .speech-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            resize: vertical;
+        }
+        
+        .speech-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        
+        .btn-speech {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .btn-speech:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+        
+        .btn-speech-stop {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .btn-speech-stop:disabled {
+            background-color: #fca5a5;
+            cursor: not-allowed;
+        }
+        
+        .speech-options {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .speech-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            gap: 4px;
+        }
+        
+        .speech-select {
+            max-width: 180px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            font-size: 0.8rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        button {
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-start {
+            background-color: #22c55e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-stop {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .wave-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 640px) {
+            .wave-buttons {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .wave-btn {
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+
+        .wave-btn.active {
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .frequency-options {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .freq-btn {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+
+        .freq-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        .control-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .range-container {
+            position: relative;
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 999px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .custom-range {
+            display: none;
+            margin-top: 8px;
+        }
+
+        .info-panel {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .info-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .info-description {
+            font-size: 0.875rem;
+            color: #1e40af;
+            margin-bottom: 12px;
+        }
+
+        .info-subtitle {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 4px;
+        }
+
+        .info-list {
+            font-size: 0.875rem;
+            color: #1e3a8a;
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .info-list li {
+            margin-bottom: 4px;
+        }
+
+        .troubleshooting {
+            background-color: #fefce8;
+            border: 1px solid #fef08a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .troubleshooting-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #854d0e;
+            margin-top: 0;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .troubleshooting-list {
+            font-size: 0.875rem;
+            color: #a16207;
+            margin: 0;
+            padding-left: 24px;
+        }
+
+        .troubleshooting-list li {
+            margin-bottom: 4px;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #fef08a;
+            margin: 12px 0;
+        }
+
+        .playing-indicator {
+            background-color: #dcfce7;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .playing-text {
+            font-weight: 500;
+            color: #166534;
+            margin: 0 0 4px 0;
+        }
+
+        .playing-details {
+            font-size: 0.875rem;
+            color: #15803d;
+            margin: 0 0 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Brainwave Binaural Generator</h1>
+            <button id="toggle-btn" class="btn-start">Start</button>
+        </div>
+        
+        <div id="speech-panel" class="speech-panel">
+            <h3 class="speech-title">Custom Hypnosis Script</h3>
+            <textarea id="speech-text" class="speech-textarea" placeholder="Enter your custom hypnosis script here. It will be read aloud over the binaural beats. You can paste in the quantum coding script or write your own affirmations."></textarea>
+            <div class="speech-controls">
+                <button id="speak-btn" class="btn-speech" disabled>Read Script</button>
+                <button id="stop-speech-btn" class="btn-speech-stop" disabled>Stop Reading</button>
+                <div class="speech-options">
+                    <label class="speech-label">
+                        Voice:
+                        <select id="voice-select" class="speech-select">
+                            <option value="">Loading voices...</option>
+                        </select>
+                    </label>
+                    <label class="speech-label">
+                        Rate:
+                        <input type="range" id="rate-slider" min="0.5" max="1.5" step="0.1" value="0.8">
+                        <span id="rate-value">0.8</span>
+                    </label>
+                    <label class="speech-label">
+                        Volume:
+                        <input type="range" id="speech-volume-slider" min="0" max="1" step="0.1" value="0.7">
+                        <span id="speech-volume-value">0.7</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="wave-buttons">
+            <button id="delta-btn" class="wave-btn" style="background-color: #6366f1;">Delta</button>
+            <button id="theta-btn" class="wave-btn active" style="background-color: #3b82f6;">Theta</button>
+            <button id="alpha-btn" class="wave-btn" style="background-color: #22c55e;">Alpha</button>
+            <button id="lowBeta-btn" class="wave-btn" style="background-color: #eab308;">Low Beta</button>
+            <button id="midBeta-btn" class="wave-btn" style="background-color: #f97316;">Mid Beta</button>
+            <button id="highBeta-btn" class="wave-btn" style="background-color: #ef4444;">High Beta</button>
+            <button id="gamma-btn" class="wave-btn" style="background-color: #a855f7;">Gamma</button>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" id="carrier-label">Carrier Frequency: 200 Hz</label>
+            <div class="frequency-options">
+                <button id="freq-200" class="freq-btn active">200 Hz</button>
+                <button id="freq-1000" class="freq-btn">1000 Hz</button>
+                <button id="freq-custom" class="freq-btn">Custom</button>
+            </div>
+            <div id="custom-range" class="custom-range">
+                <div class="range-container">
+                    <input type="range" id="carrier-slider" min="100" max="2000" step="10" value="200">
+                    <div class="range-labels">
+                        <span>100 Hz</span>
+                        <span>2000 Hz</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" id="beat-label">Binaural Beat (Theta): 6.0 Hz</label>
+            <div class="range-container">
+                <input type="range" id="beat-slider" min="4" max="8" step="0.1" value="6.0">
+                <div class="range-labels">
+                    <span id="beat-min">4 Hz</span>
+                    <span id="beat-max">8 Hz</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" id="volume-label">Volume: -20 dB</label>
+            <div class="range-container">
+                <input type="range" id="volume-slider" min="-40" max="0" step="1" value="-20">
+                <div class="range-labels">
+                    <span>Quiet</span>
+                    <span>Loud</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="playing-indicator" class="playing-indicator">
+            <p class="playing-text">Audio playing: 200Hz carrier with 6.0Hz binaural beat</p>
+            <p class="playing-details">Left ear: 200Hz | Right ear: 206Hz</p>
+            <p class="playing-details">Remember: You must use headphones to hear binaural beats properly</p>
+        </div>
+
+        <div class="troubleshooting">
+            <h3 class="troubleshooting-title">⚠️ Audio Troubleshooting</h3>
+            <ol class="troubleshooting-list">
+                <li>Make sure your device's volume is turned up</li>
+                <li>Use headphones (required for binaural effects)</li>
+                <li>Click the Start button and allow any audio permissions</li>
+                <li>You should hear a brief test tone when starting</li>
+                <li>Increase the volume slider above if needed</li>
+            </ol>
+            <div class="divider"></div>
+            <p class="troubleshooting-title" style="margin-top: 8px;">About Carrier Frequencies:</p>
+            <ul class="troubleshooting-list" style="font-size: 0.75rem;">
+                <li>200 Hz: Traditional carrier, works well for most people</li>
+                <li>1000 Hz: Higher carrier, may be more perceptible to some</li>
+                <li>Custom: Choose your preferred carrier frequency</li>
+                <li>Note: The binaural effect occurs from the frequency difference between ears</li>
+            </ul>
+        </div>
+
+        <div class="info-panel">
+            <h2 class="info-title" id="current-wave-title">Current Wave: Theta</h2>
+            <p class="info-description" id="wave-description">Deep meditation, REM sleep, creativity</p>
+            
+            <h3 class="info-subtitle">How to Use</h3>
+            <ul class="info-list">
+                <li><strong>HEADPHONES REQUIRED</strong> - binaural beats only work with stereo headphones</li>
+                <li>Click the "Start" button and allow audio permissions if prompted</li>
+                <li>If no sound, check your volume settings and make sure headphones are connected</li>
+                <li>Try increasing the volume slider and your device volume</li>
+                <li>Find a quiet, comfortable space</li>
+                <li>Start with 10-30 minute sessions</li>
+                <li>Different brainwaves support different mental states</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Sample hypnosis script - can be used as default
+        const sampleScript = `Take a deep breath in... and slowly exhale... allowing your body to relax completely.
+
+With each breath, feel yourself sinking deeper into a state of peaceful calm... where your mind becomes receptive... open to possibility... and connection.
+
+Feel the gentle theta waves washing over you... creating the perfect bridge between your conscious mind... and the vast quantum field of infinite potential.
+
+Imagine now that with each breath, you're connecting more deeply to the quantum field... the vast ocean of energy and information that surrounds us all.
+
+This field contains every possibility... every potential outcome... including the knowledge, skills, and opportunities you seek in coding and robotics.
+
+As you breathe and listen to the theta waves, you're tuning your consciousness to the perfect frequency... the frequency of creation and manifestation.
+
+Visualize yourself understanding complex programming concepts with ease... the patterns and logic becoming second nature to you... your problem-solving abilities enhanced and amplified.
+
+Feel the joy and satisfaction of bringing your ideas to life... of seeing your creations move, respond, and function exactly as you intended.
+
+"My mind is perfectly suited for coding and logical thinking."
+
+"I learn new programming languages and concepts with ease and joy."
+
+"I am naturally skilled at designing and building robots."
+
+"Solutions come to me effortlessly when I encounter challenges."
+
+Allow yourself to drift into peaceful sleep if that's your intention... or to gently return to waking consciousness... carrying with you the peace, clarity, and connection you've established.`;
+
+        // Brainwave frequency ranges and descriptions
+        const brainwaveRanges = {
+            delta: { min: 0.5, max: 4, description: "Deep sleep, healing, dreamless sleep", color: "#6366f1" },
+            theta: { min: 4, max: 8, description: "Deep meditation, REM sleep, creativity", color: "#3b82f6" },
+            alpha: { min: 8, max: 12, description: "Relaxed alertness, calm focus, flow state", color: "#22c55e" },
+            lowBeta: { min: 12, max: 15, description: "Relaxed focus, calm thinking", color: "#eab308" },
+            midBeta: { min: 15, max: 20, description: "Active engagement, learning", color: "#f97316" },
+            highBeta: { min: 20, max: 30, description: "Alertness, problem solving", color: "#ef4444" },
+            gamma: { min: 30, max: 50, description: "Higher cognitive processing, peak concentration", color: "#a855f7" }
+        };
+
+        // State variables
+        let isPlaying = false;
+        let waveType = 'theta';
+        let frequency = 200;
+        let binauralBeat = 6.0;
+        let volume = -20;
+        let leftOsc, rightOsc, leftChannel, rightChannel, testTone;
+        let speechSynthesis = window.speechSynthesis;
+        let speechUtterance = null;
+        let voices = [];
+        let isSpeaking = false;
+        let speechRate = 0.8;
+        let speechVolume = 0.7;
+
+        // HTML Elements
+        const toggleBtn = document.getElementById('toggle-btn');
+        const carrierLabel = document.getElementById('carrier-label');
+        const carrierSlider = document.getElementById('carrier-slider');
+        const beatLabel = document.getElementById('beat-label');
+        const beatSlider = document.getElementById('beat-slider');
+        const beatMin = document.getElementById('beat-min');
+        const beatMax = document.getElementById('beat-max');
+        const volumeLabel = document.getElementById('volume-label');
+        const volumeSlider = document.getElementById('volume-slider');
+        const playingIndicator = document.getElementById('playing-indicator');
+        const currentWaveTitle = document.getElementById('current-wave-title');
+        const waveDescription = document.getElementById('wave-description');
+        const customRange = document.getElementById('custom-range');
+        const freq200 = document.getElementById('freq-200');
+        const freq1000 = document.getElementById('freq-1000');
+        const freqCustom = document.getElementById('freq-custom');
+        
+        // Speech Elements
+        const speechText = document.getElementById('speech-text');
+        const speakBtn = document.getElementById('speak-btn');
+        const stopSpeechBtn = document.getElementById('stop-speech-btn');
+        const voiceSelect = document.getElementById('voice-select');
+        const rateSlider = document.getElementById('rate-slider');
+        const rateValue = document.getElementById('rate-value');
+        const speechVolumeSlider = document.getElementById('speech-volume-slider');
+        const speechVolumeValue = document.getElementById('speech-volume-value');
+
+        // Wave type buttons
+        const waveButtons = {
+            delta: document.getElementById('delta-btn'),
+            theta: document.getElementById('theta-btn'),
+            alpha: document.getElementById('alpha-btn'),
+            lowBeta: document.getElementById('lowBeta-btn'),
+            midBeta: document.getElementById('midBeta-btn'),
+            highBeta: document.getElementById('highBeta-btn'),
+            gamma: document.getElementById('gamma-btn')
+        };
+
+        // Initialize Tone.js
+        Tone.context.latencyHint = 'interactive';
+
+        // Setup oscillators
+        function setupOscillators() {
+            // Create separate channels for left and right
+            leftChannel = new Tone.Channel({ volume: volume }).toDestination();
+            rightChannel = new Tone.Channel({ volume: volume }).toDestination();
+            
+            // Create the panners
+            const leftPanner = new Tone.Panner(-1).connect(leftChannel);
+            const rightPanner = new Tone.Panner(1).connect(rightChannel);
+            
+            // Create oscillators
+            leftOsc = new Tone.Oscillator({
+                frequency: frequency,
+                type: "sine",
+                volume: 0 // Volume handled by channel
+            }).connect(leftPanner);
+            
+            rightOsc = new Tone.Oscillator({
+                frequency: frequency + binauralBeat,
+                type: "sine", 
+                volume: 0 // Volume handled by channel
+            }).connect(rightPanner);
+            
+            // Add a test tone
+            testTone = new Tone.Oscillator({
+                frequency: 440, // A4 note
+                type: "triangle",
+                volume: -20
+            }).toDestination();
+            
+            // Start the test tone for 1 second then stop
+            testTone.start();
+            setTimeout(() => testTone.stop(), 1000);
+        }
+
+        // Update oscillator parameters
+        function updateOscillators() {
+            if (isPlaying && leftOsc && rightOsc) {
+                leftOsc.frequency.value = frequency;
+                rightOsc.frequency.value = frequency + binauralBeat;
+                
+                if (leftChannel && rightChannel) {
+                    leftChannel.volume.value = volume;
+                    rightChannel.volume.value = volume;
+                }
+            }
+        }
+
+        // Toggle play/pause
+        async function togglePlay() {
+            try {
+                // Start audio context if needed
+                if (Tone.context.state !== 'running') {
+                    await Tone.start();
+                    console.log("Tone.js audio context started");
+                }
+                
+                if (!isPlaying) {
+                    console.log("Setting up oscillators");
+                    setupOscillators();
+                    
+                    console.log(`Starting oscillators: Left=${frequency}Hz, Right=${frequency + binauralBeat}Hz`);
+                    leftOsc.start();
+                    rightOsc.start();
+                    
+                    console.log("Oscillators started successfully");
+                    
+                    toggleBtn.textContent = 'Stop';
+                    toggleBtn.className = 'btn-stop';
+                    playingIndicator.style.display = 'block';
+                    updatePlayingIndicator();
+                    
+                    // Disable frequency select while playing
+                    freq200.disabled = true;
+                    freq1000.disabled = true;
+                    freqCustom.disabled = true;
+                    carrierSlider.disabled = true;
+                } else {
+                    if (leftOsc && rightOsc) {
+                        console.log("Stopping oscillators");
+                        leftOsc.stop();
+                        rightOsc.stop();
+                        
+                        // Dispose oscillators and channels
+                        leftOsc.dispose();
+                        rightOsc.dispose();
+                        leftChannel.dispose();
+                        rightChannel.dispose();
+                        
+                        console.log("Oscillators stopped and disposed");
+                    }
+                    
+                    toggleBtn.textContent = 'Start';
+                    toggleBtn.className = 'btn-start';
+                    playingIndicator.style.display = 'none';
+                    
+                    // Re-enable frequency select
+                    freq200.disabled = false;
+                    freq1000.disabled = false;
+                    freqCustom.disabled = false;
+                    carrierSlider.disabled = false;
+                }
+                
+                isPlaying = !isPlaying;
+            } catch (error) {
+                console.error("Audio playback error:", error);
+                alert("Audio playback error. Please check console for details.");
+            }
+        }
+
+        // Change wave type
+        function changeWaveType(type) {
+            // Skip if same type or audio is playing
+            if (type === waveType || isPlaying) return;
+            
+            // Update active button
+            waveButtons[waveType].classList.remove('active');
+            waveButtons[type].classList.add('active');
+            
+            // Update wave type
+            waveType = type;
+            
+            // Update wave details
+            currentWaveTitle.textContent = `Current Wave: ${waveType.charAt(0).toUpperCase() + waveType.slice(1)}`;
+            waveDescription.textContent = brainwaveRanges[type].description;
+            
+            // Update beat slider range
+            const range = brainwaveRanges[type];
+            beatSlider.min = range.min;
+            beatSlider.max = range.max;
+            beatMin.textContent = `${range.min} Hz`;
+            beatMax.textContent = `${range.max} Hz`;
+            
+            // Set beat to middle of range
+            const middleValue = (range.min + range.max) / 2;
+            binauralBeat = parseFloat(middleValue.toFixed(1));
+            beatSlider.value = binauralBeat;
+            updateBeatLabel();
+        }
+
+        // Update carrier frequency
+        function updateCarrier(newFreq, isCustom = false) {
+            if (isPlaying) return;
+            
+            frequency = newFreq;
+            carrierSlider.value = newFreq;
+            carrierLabel.textContent = `Carrier Frequency: ${frequency} Hz`;
+            
+            // Update button states
+            freq200.classList.remove('active');
+            freq1000.classList.remove('active');
+            freqCustom.classList.remove('active');
+            
+            if (isCustom) {
+                freqCustom.classList.add('active');
+                customRange.style.display = 'block';
+            } else {
+                customRange.style.display = 'none';
+                if (newFreq === 200) {
+                    freq200.classList.add('active');
+                } else if (newFreq === 1000) {
+                    freq1000.classList.add('active');
+                }
+            }
+        }
+
+        // Update beat label
+        function updateBeatLabel() {
+            beatLabel.textContent = `Binaural Beat (${waveType.charAt(0).toUpperCase() + waveType.slice(1)}): ${binauralBeat.toFixed(1)} Hz`;
+        }
+
+        // Update volume label
+        function updateVolumeLabel() {
+            volumeLabel.textContent = `Volume: ${volume} dB`;
+        }
+
+        // Update playing indicator
+        function updatePlayingIndicator() {
+            if (!playingIndicator) return;
+            
+            const indicator = playingIndicator.getElementsByClassName('playing-text')[0];
+            const details = playingIndicator.getElementsByClassName('playing-details')[0];
+            
+            indicator.textContent = `Audio playing: ${frequency}Hz carrier with ${binauralBeat.toFixed(1)}Hz binaural beat`;
+            details.textContent = `Left ear: ${frequency}Hz | Right ear: ${(frequency + binauralBeat).toFixed(1)}Hz`;
+        }
+
+        // Event Listeners
+        toggleBtn.addEventListener('click', togglePlay);
+
+        // Wave type buttons
+        Object.keys(waveButtons).forEach(type => {
+            waveButtons[type].addEventListener('click', () => changeWaveType(type));
+        });
+
+        // Frequency buttons
+        freq200.addEventListener('click', () => updateCarrier(200));
+        freq1000.addEventListener('click', () => updateCarrier(1000));
+        freqCustom.addEventListener('click', () => updateCarrier(carrierSlider.value, true));
+
+        // Carrier slider
+        carrierSlider.addEventListener('input', () => {
+            frequency = parseInt(carrierSlider.value);
+            carrierLabel.textContent = `Carrier Frequency: ${frequency} Hz`;
+        });
+
+        // Beat slider
+        beatSlider.addEventListener('input', () => {
+            binauralBeat = parseFloat(beatSlider.value);
+            updateBeatLabel();
+            updateOscillators();
+            updatePlayingIndicator();
+        });
+
+        // Volume slider
+        volumeSlider.addEventListener('input', () => {
+            volume = parseInt(volumeSlider.value);
+            updateVolumeLabel();
+            updateOscillators();
+        });
+
+        // Clean up function for page unload
+        window.addEventListener('beforeunload', () => {
+            if (isPlaying && leftOsc && rightOsc) {
+                leftOsc.stop();
+                rightOsc.stop();
+                leftOsc.dispose();
+                rightOsc.dispose();
+                leftChannel.dispose();
+                rightChannel.dispose();
+            }
+        });
+
+        // Speech synthesis functions
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            
+            if (voices.length > 0) {
+                // Clear dropdown
+                voiceSelect.innerHTML = '';
+                
+                // Add voices to select
+                voices.forEach((voice, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    voiceSelect.appendChild(option);
+                });
+                
+                // Enable speak button if text is present
+                if (speechText.value.trim().length > 0) {
+                    speakBtn.disabled = false;
+                }
+            }
+        }
+        
+        // Load voices when they change
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+        
+        // Start speech
+        function startSpeech() {
+            if (speechSynthesis && !isSpeaking && isPlaying) {
+                const text = speechText.value.trim();
+                if (text.length === 0) return;
+                
+                // Create utterance
+                speechUtterance = new SpeechSynthesisUtterance(text);
+                
+                // Set voice
+                const voiceIndex = parseInt(voiceSelect.value);
+                if (!isNaN(voiceIndex) && voiceIndex >= 0 && voiceIndex < voices.length) {
+                    speechUtterance.voice = voices[voiceIndex];
+                }
+                
+                // Set rate and volume
+                speechUtterance.rate = speechRate;
+                speechUtterance.volume = speechVolume;
+                
+                // Set up event handlers
+                speechUtterance.onstart = () => {
+                    isSpeaking = true;
+                    speakBtn.disabled = true;
+                    stopSpeechBtn.disabled = false;
+                    console.log("Speech started");
+                };
+                
+                speechUtterance.onend = () => {
+                    isSpeaking = false;
+                    speakBtn.disabled = false;
+                    stopSpeechBtn.disabled = true;
+                    console.log("Speech ended");
+                };
+                
+                speechUtterance.onerror = (event) => {
+                    console.error("Speech error:", event);
+                    isSpeaking = false;
+                    speakBtn.disabled = false;
+                    stopSpeechBtn.disabled = true;
+                };
+                
+                // Start speaking
+                speechSynthesis.speak(speechUtterance);
+            }
+        }
+        
+        // Stop speech
+        function stopSpeech() {
+            if (speechSynthesis && isSpeaking) {
+                speechSynthesis.cancel();
+                isSpeaking = false;
+                speakBtn.disabled = false;
+                stopSpeechBtn.disabled = true;
+            }
+        }
+        
+        // Speech control event listeners
+        speechText.addEventListener('input', () => {
+            speakBtn.disabled = speechText.value.trim().length === 0 || !isPlaying;
+        });
+        
+        speakBtn.addEventListener('click', startSpeech);
+        stopSpeechBtn.addEventListener('click', stopSpeech);
+        
+        rateSlider.addEventListener('input', () => {
+            speechRate = parseFloat(rateSlider.value);
+            rateValue.textContent = speechRate.toFixed(1);
+            
+            if (isSpeaking) {
+                // Restart speech with new rate
+                const currentText = speechUtterance.text;
+                stopSpeech();
+                setTimeout(() => {
+                    speechText.value = currentText;
+                    startSpeech();
+                }, 100);
+            }
+        });
+        
+        speechVolumeSlider.addEventListener('input', () => {
+            speechVolume = parseFloat(speechVolumeSlider.value);
+            speechVolumeValue.textContent = speechVolume.toFixed(1);
+            
+            if (isSpeaking && speechUtterance) {
+                speechUtterance.volume = speechVolume;
+            }
+        });
+        
+        // Update speech button state when audio starts/stops
+        const updateSpeechButtonState = () => {
+            speakBtn.disabled = !isPlaying || speechText.value.trim().length === 0;
+            if (!isPlaying && isSpeaking) {
+                stopSpeech();
+            }
+        };
+        
+        // Add the sample script to the textarea
+        speechText.value = sampleScript;
+        
+        // Add speech button update to toggle play
+        const originalTogglePlay = togglePlay;
+        togglePlay = async function() {
+            await originalTogglePlay();
+            updateSpeechButtonState();
+        };
+        
+        // Initialize UI
+        updateBeatLabel();
+        updateVolumeLabel();
+        loadVoices();
+    </script>
+</body>
+</html>
