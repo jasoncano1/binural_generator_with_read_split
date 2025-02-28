@@ -826,10 +826,21 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
                     voiceSelect.appendChild(option);
                 });
                 
-                // Enable speak button if text is present
-                if (speechText.value.trim().length > 0) {
-                    speakBtn.disabled = false;
+                // Try to select an English voice by default
+                let englishVoiceIndex = voices.findIndex(voice => 
+                    voice.lang.includes('en') && !voice.name.includes('Google'));
+                
+                if (englishVoiceIndex === -1) {
+                    englishVoiceIndex = 0; // Fallback to first voice
                 }
+                
+                voiceSelect.value = englishVoiceIndex;
+                
+                // Enable speak button if text is present and audio is playing
+                speakBtn.disabled = !(speechText.value.trim().length > 0 && isPlaying);
+                console.log("Voices loaded:", voices.length);
+            } else {
+                console.log("No voices available yet");
             }
         }
         
@@ -840,47 +851,71 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
         
         // Start speech
         function startSpeech() {
-            if (speechSynthesis && !isSpeaking && isPlaying) {
-                const text = speechText.value.trim();
-                if (text.length === 0) return;
-                
-                // Create utterance
-                speechUtterance = new SpeechSynthesisUtterance(text);
-                
-                // Set voice
-                const voiceIndex = parseInt(voiceSelect.value);
-                if (!isNaN(voiceIndex) && voiceIndex >= 0 && voiceIndex < voices.length) {
-                    speechUtterance.voice = voices[voiceIndex];
+            try {
+                if (speechSynthesis && !isSpeaking && isPlaying) {
+                    const text = speechText.value.trim();
+                    if (text.length === 0) return;
+                    
+                    // Create utterance
+                    speechUtterance = new SpeechSynthesisUtterance(text);
+                    
+                    // Set voice
+                    const voiceIndex = parseInt(voiceSelect.value);
+                    if (!isNaN(voiceIndex) && voiceIndex >= 0 && voiceIndex < voices.length) {
+                        speechUtterance.voice = voices[voiceIndex];
+                    }
+                    
+                    // Set rate and volume
+                    speechUtterance.rate = speechRate;
+                    speechUtterance.volume = speechVolume;
+                    
+                    // Set up event handlers
+                    speechUtterance.onstart = () => {
+                        isSpeaking = true;
+                        speakBtn.disabled = true;
+                        stopSpeechBtn.disabled = false;
+                        console.log("Speech started");
+                    };
+                    
+                    speechUtterance.onend = () => {
+                        isSpeaking = false;
+                        speakBtn.disabled = false;
+                        stopSpeechBtn.disabled = true;
+                        console.log("Speech ended");
+                    };
+                    
+                    speechUtterance.onerror = (event) => {
+                        console.error("Speech error:", event);
+                        isSpeaking = false;
+                        speakBtn.disabled = false;
+                        stopSpeechBtn.disabled = true;
+                    };
+                    
+                    console.log("Starting speech with voice:", speechUtterance.voice ? speechUtterance.voice.name : "default");
+                    console.log("Text length:", text.length, "characters");
+                    
+                    // Start speaking
+                    window.speechSynthesis.cancel(); // Clear any previous utterances
+                    window.speechSynthesis.speak(speechUtterance);
+                    
+                    // Make sure button states are updated
+                    setTimeout(() => {
+                        if (!isSpeaking) {
+                            // Manual trigger if onstart didn't fire
+                            isSpeaking = true;
+                            speakBtn.disabled = true;
+                            stopSpeechBtn.disabled = false;
+                        }
+                    }, 500);
+                } else {
+                    console.log("Cannot start speech:", 
+                                "speechSynthesis available:", !!speechSynthesis, 
+                                "isSpeaking:", isSpeaking, 
+                                "isPlaying:", isPlaying);
                 }
-                
-                // Set rate and volume
-                speechUtterance.rate = speechRate;
-                speechUtterance.volume = speechVolume;
-                
-                // Set up event handlers
-                speechUtterance.onstart = () => {
-                    isSpeaking = true;
-                    speakBtn.disabled = true;
-                    stopSpeechBtn.disabled = false;
-                    console.log("Speech started");
-                };
-                
-                speechUtterance.onend = () => {
-                    isSpeaking = false;
-                    speakBtn.disabled = false;
-                    stopSpeechBtn.disabled = true;
-                    console.log("Speech ended");
-                };
-                
-                speechUtterance.onerror = (event) => {
-                    console.error("Speech error:", event);
-                    isSpeaking = false;
-                    speakBtn.disabled = false;
-                    stopSpeechBtn.disabled = true;
-                };
-                
-                // Start speaking
-                speechSynthesis.speak(speechUtterance);
+            } catch (error) {
+                console.error("Error starting speech:", error);
+                alert("Speech synthesis error: " + error.message);
             }
         }
         
@@ -940,14 +975,22 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
         // Add speech button update to toggle play
         const originalTogglePlay = togglePlay;
         togglePlay = async function() {
-            await originalTogglePlay();
+            await originalTogglePlay.call(this);
             updateSpeechButtonState();
         };
         
         // Initialize UI
         updateBeatLabel();
         updateVolumeLabel();
-        loadVoices();
+        
+        // Load voices initially
+        setTimeout(() => {
+            loadVoices();
+            // Check if voices are loaded, if not try again
+            if (voices.length === 0) {
+                setTimeout(loadVoices, 1000);
+            }
+        }, 100);
     </script>
 </body>
 </html>
