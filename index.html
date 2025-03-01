@@ -1,67 +1,322 @@
+ <!-- Add a simple fallback button as a guaranteed way to activate speech -->
+<script>
+    // Emergency speech function - can be called from console if needed
+    function emergencySpeech() {
+        try {
+            const text = document.getElementById('speech-text').value;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.8;
+            utterance.volume = 0.7;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+            alert("Emergency speech triggered. Check if you can hear the narration.");
+        } catch (e) {
+            alert("Speech error: " + e.message);
+        }
+    }
+
+    
+    // Dark mode toggle function (single definition)
+    let isDarkMode = false;
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-icon').textContent = '☀️';
+        } else {
+            document.body.classList.remove('dark-mode');
+            document.getElementById('theme-icon').textContent = '🌙';
+        }
+        localStorage.setItem('binaural-dark-mode', isDarkMode ? 'true' : 'false');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Dark mode initialization and theme toggle events
+        const savedDarkMode = localStorage.getItem('binaural-dark-mode');
+        if (savedDarkMode === 'true') {
+            // isDarkMode is false by default; toggling will set it to true
+            toggleDarkMode();
+        }
+        document.getElementById('theme-toggle').addEventListener('click', toggleDarkMode);
+
+        // Speech buttons events
+        document.getElementById('speak-btn').onclick = function () {
+            startSpeech();
+        };
+        document.getElementById('stop-speech-btn').onclick = function () {
+            stopSpeech();
+        };
+
+        // Enable the speak button shortly after audio toggle
+        document.getElementById('toggle-btn').addEventListener('click', function () {
+            setTimeout(function () {
+                if (isPlaying) {
+                    document.getElementById('speak-btn').disabled = false;
+                } else {
+                    document.getElementById('speak-btn').disabled = true;
+                }
+            }, 500);
+        });
+    });
+
+    
+    // --- Speech synthesis functions ---
+    function loadVoices() {
+        voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            voiceSelect.innerHTML = ''; // Clear dropdown
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+            let englishVoiceIndex = voices.findIndex(voice => voice.lang.includes('en') && !voice.name.includes('Google'));
+            if (englishVoiceIndex === -1) {
+                englishVoiceIndex = 0;
+            }
+            voiceSelect.value = englishVoiceIndex;
+            // Enable speak button if text is present and audio is playing
+            speakBtn.disabled = !(speechText.value.trim().length > 0 && isPlaying);
+            console.log("Voices loaded:", voices.length);
+        } else {
+            console.log("No voices available yet");
+        }
+    }
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    
+    function startSpeech() {
+        try {
+            console.log("startSpeech called");
+            if (typeof speechSynthesis === 'undefined') {
+                window.speechSynthesis = window.webkitSpeechSynthesis || window.mozSpeechSynthesis;
+                console.log("Tried to use alternative speechSynthesis");
+            }
+            if (!window.speechSynthesis) {
+                console.error("Speech synthesis not available in this browser");
+                alert("Speech synthesis is not supported in your browser");
+                return;
+            }
+            const text = document.getElementById('speech-text').value.trim();
+            if (text.length === 0) {
+                console.log("No text to speak");
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            try {
+                const voiceSelect = document.getElementById('voice-select');
+                const voices = window.speechSynthesis.getVoices();
+                const voiceIndex = parseInt(voiceSelect.value);
+                if (voices && voices.length > 0 && voiceIndex >= 0 && voiceIndex < voices.length) {
+                    utterance.voice = voices[voiceIndex];
+                    console.log("Set voice to:", voices[voiceIndex].name);
+                } else {
+                    console.log("Using default voice");
+                }
+            } catch (e) {
+                console.error("Error setting voice:", e);
+            }
+            utterance.rate = parseFloat(document.getElementById('rate-slider').value);
+            utterance.volume = parseFloat(document.getElementById('speech-volume-slider').value);
+            console.log("Speaking with rate:", utterance.rate, "volume:", utterance.volume);
+            isSpeaking = true;
+            document.getElementById('speak-btn').disabled = true;
+            document.getElementById('stop-speech-btn').disabled = false;
+            window.speechSynthesis.speak(utterance);
+            console.log("Speech started");
+            utterance.onend = function () {
+                console.log("Speech ended");
+                isSpeaking = false;
+                document.getElementById('speak-btn').disabled = false;
+                document.getElementById('stop-speech-btn').disabled = true;
+            };
+            utterance.onerror = function (event) {
+                console.error("Speech error:", event);
+                isSpeaking = false;
+                document.getElementById('speak-btn').disabled = false;
+                document.getElementById('stop-speech-btn').disabled = true;
+            };
+            speechUtterance = utterance;
+        } catch (error) {
+            console.error("Error in startSpeech:", error);
+            alert("Error starting speech: " + error.message);
+        }
+    }
+    
+    function stopSpeech() {
+        try {
+            console.log("stopSpeech called");
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            document.getElementById('speak-btn').disabled = false;
+            document.getElementById('stop-speech-btn').disabled = true;
+            console.log("Speech stopped");
+        } catch (error) {
+            console.error("Error stopping speech:", error);
+        }
+    }
+
+    // --- (Other functions for Tone.js oscillators, event listeners, etc remain unchanged) ---
+</script>
+<!-- Add a hidden button that can be shown via console if everything else fails -->
+<button id="emergency-speech" onclick="emergencySpeech()" style="display: none; position: fixed; bottom: 10px; right: 10px; z-index: 9999; 
+                   background-color: red; color: white; padding: 10px; border: none; border-radius: 5px;">
+    Emergency Speech
+</button>
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brainwave Binaural Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.37/Tone.js"></script>
     <style>
+        /* Base Styles - Light Mode by Default */
+        :root {
+            --bg-color: #f9fafb;
+            --container-bg: white;
+            --text-color: #1f2937;
+            --panel-bg: #f8fafc;
+            --border-color: #e5e7eb;
+            --info-bg: #eff6ff;
+            --info-border: #bfdbfe;
+            --info-text: #1e40af;
+            --info-detail: #1e3a8a;
+            --trouble-bg: #fefce8;
+            --trouble-border: #fef08a;
+            --trouble-text: #854d0e;
+            --trouble-detail: #a16207;
+            --playing-bg: #dcfce7;
+            --playing-border: #86efac;
+            --playing-text: #166534;
+            --input-bg: white;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark Mode Variables */
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #e5e5e5;
+            --panel-bg: #3a3a3a;
+            --border-color: #4a4a4a;
+            --info-bg: #2c3e50;
+            --info-border: #355070;
+            --info-text: #90caf9;
+            --info-detail: #bbdefb;
+            --trouble-bg: #443c14;
+            --trouble-border: #665c24;
+            --trouble-text: #f0c14b;
+            --trouble-detail: #ffe082;
+            --playing-bg: #1b4332;
+            --playing-border: #2d6a4f;
+            --playing-text: #52b788;
+            --input-bg: #3a3a3a;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             line-height: 1.5;
             margin: 0;
             padding: 20px;
-            background-color: #f9fafb;
-            color: #1f2937;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background-color: white;
+            background-color: var(--container-bg);
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--box-shadow);
             padding: 24px;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
-        
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-theme {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            transition: background-color 0.2s;
+        }
+
+        .btn-theme:hover {
+            background-color: var(--border-color);
+        }
+
         /* Speech Panel Styles */
         .speech-panel {
             margin-top: 20px;
             margin-bottom: 20px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 16px;
-            background-color: #f8fafc;
+            background-color: var(--panel-bg);
+            transition: background-color 0.3s, border-color 0.3s;
         }
-        
+
         .speech-title {
             font-size: 1rem;
             font-weight: 600;
-            color: #1e40af;
+            color: var(--info-text);
             margin-top: 0;
             margin-bottom: 12px;
+            transition: color 0.3s;
         }
-        
+
         .speech-textarea {
             width: 100%;
             min-height: 120px;
             padding: 12px;
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             font-family: inherit;
             font-size: 0.9rem;
             line-height: 1.5;
             margin-bottom: 12px;
             resize: vertical;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
-        
+
         .speech-controls {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             align-items: flex-start;
         }
-        
+
         .btn-speech {
             background-color: #3b82f6;
             color: white;
@@ -71,12 +326,12 @@
             font-size: 0.9rem;
             cursor: pointer;
         }
-        
+
         .btn-speech:disabled {
             background-color: #93c5fd;
             cursor: not-allowed;
         }
-        
+
         .btn-speech-stop {
             background-color: #ef4444;
             color: white;
@@ -86,12 +341,12 @@
             font-size: 0.9rem;
             cursor: pointer;
         }
-        
+
         .btn-speech-stop:disabled {
             background-color: #fca5a5;
             cursor: not-allowed;
         }
-        
+
         .speech-options {
             flex: 1;
             display: flex;
@@ -99,14 +354,14 @@
             gap: 10px;
             justify-content: flex-end;
         }
-        
+
         .speech-label {
             display: flex;
             align-items: center;
             font-size: 0.8rem;
             gap: 4px;
         }
-        
+
         .speech-select {
             max-width: 180px;
             padding: 4px;
@@ -356,18 +611,25 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
             <h1>Brainwave Binaural Generator</h1>
-            <button id="toggle-btn" class="btn-start">Start</button>
+            <div class="header-buttons">
+                <button id="theme-toggle" class="btn-theme" title="Toggle Dark Mode">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                <button id="toggle-btn" class="btn-start">Start</button>
+            </div>
         </div>
-        
+
         <div id="speech-panel" class="speech-panel">
             <h3 class="speech-title">Custom Hypnosis Script</h3>
-            <textarea id="speech-text" class="speech-textarea" placeholder="Enter your custom hypnosis script here. It will be read aloud over the binaural beats. You can paste in the quantum coding script or write your own affirmations."></textarea>
+            <textarea id="speech-text" class="speech-textarea"
+                placeholder="Enter your custom hypnosis script here. It will be read aloud over the binaural beats. You can paste in the quantum coding script or write your own affirmations."></textarea>
             <div class="speech-controls">
-                <button id="speak-btn" class="btn-speech" disabled>Read Script</button>
+                <button id="speak-btn" class="btn-speech">Read Script</button>
                 <button id="stop-speech-btn" class="btn-speech-stop" disabled>Stop Reading</button>
                 <div class="speech-options">
                     <label class="speech-label">
@@ -439,11 +701,26 @@
                 </div>
             </div>
         </div>
-
+        
         <div id="playing-indicator" class="playing-indicator">
             <p class="playing-text">Audio playing: 200Hz carrier with 6.0Hz binaural beat</p>
             <p class="playing-details">Left ear: 200Hz | Right ear: 206Hz</p>
             <p class="playing-details">Remember: You must use headphones to hear binaural beats properly</p>
+        </div>
+        <h2 class="info-title" id="current-wave-title">Current Wave: Theta</h2>
+        <div class="info-panel">
+        <p class="info-description" id="wave-description">Deep meditation, REM sleep, creativity</p>
+        
+            <h3 class="info-subtitle">How to Use</h3>
+            <ul class="info-list">
+                <li><strong>HEADPHONES REQUIRED</strong> - binaural beats only work with stereo headphones</li>
+                <li>Click the "Start" button and allow audio permissions if prompted</li>
+                <li>If no sound, check your volume settings and make sure headphones are connected</li>
+                <li>Try increasing the volume slider and your device volume</li>
+                <li>Find a quiet, comfortable space</li>
+                <li>Start with 10-30 minute sessions</li>
+                <li>Different brainwaves support different mental states</li>
+            </ul>
         </div>
 
         <div class="troubleshooting">
@@ -465,50 +742,49 @@
             </ul>
         </div>
 
-        <div class="info-panel">
-            <h2 class="info-title" id="current-wave-title">Current Wave: Theta</h2>
-            <p class="info-description" id="wave-description">Deep meditation, REM sleep, creativity</p>
-            
-            <h3 class="info-subtitle">How to Use</h3>
-            <ul class="info-list">
-                <li><strong>HEADPHONES REQUIRED</strong> - binaural beats only work with stereo headphones</li>
-                <li>Click the "Start" button and allow audio permissions if prompted</li>
-                <li>If no sound, check your volume settings and make sure headphones are connected</li>
-                <li>Try increasing the volume slider and your device volume</li>
-                <li>Find a quiet, comfortable space</li>
-                <li>Start with 10-30 minute sessions</li>
-                <li>Different brainwaves support different mental states</li>
-            </ul>
-        </div>
     </div>
 
     <script>
         // Sample hypnosis script - can be used as default
-        const sampleScript = `Take a deep breath in... and slowly exhale... allowing your body to relax completely.
+        const sampleScript = `
+Begin by finding a comfortable position in your bed. As you lie down, close your eyes and take a deep, slow breath in… and exhale gently. Let your body begin to relax with each breath. With every inhale, imagine drawing in peaceful, healing energy; with every exhale, feel tension and stress melt away. Notice how your body feels heavier and more relaxed with each passing moment. 
 
-With each breath, feel yourself sinking deeper into a state of peaceful calm... where your mind becomes receptive... open to possibility... and connection.
+Allow your muscles—from the crown of your head down to your toes—to soften and release. Picture a warm, soothing light gently flowing over you, calming your mind and body. You are safe, you are relaxed, and you are ready to journey into a deep state of restorative sleep.
 
-Feel the gentle theta waves washing over you... creating the perfect bridge between your conscious mind... and the vast quantum field of infinite potential.
+Now, envision the infinite quantum universe around you—a boundless field of energy and possibility. Imagine tiny shimmering particles of light that represent every aspect of healing and transformation. As you float in this vast expanse, sense that each particle is imbued with the power of self-healing. They are here to nurture every cell of your body, repairing and rejuvenating you at the most profound level.
 
-Imagine now that with each breath, you're connecting more deeply to the quantum field... the vast ocean of energy and information that surrounds us all.
+Feel these quantum energies gently infusing every fiber of your being. With each breath, you draw in these healing vibrations that restore balance, vitality, and strength. Visualize these particles gathering around you, forming a luminous cocoon that protects and energizes your body and mind. In this sacred space, you are aligned with the universe’s eternal power to heal and transform.
 
-This field contains every possibility... every potential outcome... including the knowledge, skills, and opportunities you seek in coding and robotics.
+Now, let your mind embrace the positive affirmations designed to nurture your sobriety and joy. In this serene state, repeat silently to yourself:
 
-As you breathe and listen to the theta waves, you're tuning your consciousness to the perfect frequency... the frequency of creation and manifestation.
+- “I am strong, centered, and completely capable of living a sober life.”
+- “Every day, I choose clarity, balance, and wellness.”
+- “I embrace my inner power, knowing that I deserve a life filled with happiness and abundance.”
+- “I nurture my heart, and I attract a loving, supportive marriage that celebrates mutual growth and joy.”
 
-Visualize yourself understanding complex programming concepts with ease... the patterns and logic becoming second nature to you... your problem-solving abilities enhanced and amplified.
+Allow these affirmations to settle deep within your subconscious, anchoring your intentions for a healthy, balanced, and happy life. Trust that these words are seeds of positive change, sprouting resilience and transforming your inner world.
 
-Feel the joy and satisfaction of bringing your ideas to life... of seeing your creations move, respond, and function exactly as you intended.
+Now, shift your focus to your unique talents in robotics. Imagine a clear, radiant vision of your future self—a visionary innovator using your God-given talents to create breakthroughs in robotics. Picture a dynamic workshop where creativity meets precision, where each new idea is celebrated and nurtured.
 
-"My mind is perfectly suited for coding and logical thinking."
+See yourself effortlessly manifesting innovative designs and groundbreaking solutions. Feel the excitement and satisfaction of using your skills to improve lives, transforming challenges into opportunities. Let this vision fill you with a sense of purpose, knowing that every step you take is guided by your innate genius and passion. You are a creator, a pioneer, and every moment of your life reinforces your commitment to your craft.
 
-"I learn new programming languages and concepts with ease and joy."
+Now, let your mind embrace the positive affirmations designed to nurture your sobriety and joy. In this serene state, repeat silently to yourself:
 
-"I am naturally skilled at designing and building robots."
+“I am strong, centered, and completely capable of living a sober life.”
+“Every day, I choose clarity, balance, and wellness.”
+“I embrace my inner power, knowing that I deserve a life filled with happiness and abundance.”
+“I nurture my heart, and I attract a loving, supportive marriage that celebrates mutual growth and joy.”
+Allow these affirmations to settle deep within your subconscious, anchoring your intentions for a healthy, balanced, and happy life. Trust that these words are seeds of positive change, sprouting resilience and transforming your inner world.
 
-"Solutions come to me effortlessly when I encounter challenges."
+Now, shift your focus to your unique talents in robotics. Imagine a clear, radiant vision of your future self—a visionary innovator using your god-given talents to create breakthroughs in robotics. Picture a dynamic workshop where creativity meets precision, where each new idea is celebrated and nurtured.
 
-Allow yourself to drift into peaceful sleep if that's your intention... or to gently return to waking consciousness... carrying with you the peace, clarity, and connection you've established.`;
+See yourself effortlessly manifesting innovative designs and groundbreaking solutions. Feel the excitement and satisfaction of using your skills to improve lives, transforming challenges into opportunities. Let this vision fill you with a sense of purpose, knowing that every step you take is guided by your innate genius and passion. You are a creator, a pioneer, and every moment of your life reinforces your commitment to your craft.
+
+As these visions and affirmations merge into your consciousness, feel a profound sense of unity and purpose. The healing quantum energy surrounds you, the affirmations solidify your resolve, and your creative vision in robotics sparks inspiration. In this perfect balance, you are ready to drift into a deep, restorative sleep.
+
+Now, let go of any lingering thoughts. Allow your body and mind to surrender completely to sleep, knowing that the positive energy, healing, and inspiration will continue to work within you as you rest. Your subconscious mind is absorbing these messages, ensuring that you awaken renewed, empowered, and ready to manifest your brightest future.
+
+Take one final deep breath, exhale slowly, and as the theta waves of this soundtrack cradle your mind, let your awareness dissolve into the peaceful rhythm of sleep. Good night, and may you awaken with renewed strength and purpose.`;
 
         // Brainwave frequency ranges and descriptions
         const brainwaveRanges = {
@@ -552,7 +828,7 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
         const freq200 = document.getElementById('freq-200');
         const freq1000 = document.getElementById('freq-1000');
         const freqCustom = document.getElementById('freq-custom');
-        
+
         // Speech Elements
         const speechText = document.getElementById('speech-text');
         const speakBtn = document.getElementById('speak-btn');
@@ -582,31 +858,31 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
             // Create separate channels for left and right
             leftChannel = new Tone.Channel({ volume: volume }).toDestination();
             rightChannel = new Tone.Channel({ volume: volume }).toDestination();
-            
+
             // Create the panners
             const leftPanner = new Tone.Panner(-1).connect(leftChannel);
             const rightPanner = new Tone.Panner(1).connect(rightChannel);
-            
+
             // Create oscillators
             leftOsc = new Tone.Oscillator({
                 frequency: frequency,
                 type: "sine",
                 volume: 0 // Volume handled by channel
             }).connect(leftPanner);
-            
+
             rightOsc = new Tone.Oscillator({
                 frequency: frequency + binauralBeat,
-                type: "sine", 
+                type: "sine",
                 volume: 0 // Volume handled by channel
             }).connect(rightPanner);
-            
+
             // Add a test tone
             testTone = new Tone.Oscillator({
                 frequency: 440, // A4 note
                 type: "triangle",
                 volume: -20
             }).toDestination();
-            
+
             // Start the test tone for 1 second then stop
             testTone.start();
             setTimeout(() => testTone.stop(), 1000);
@@ -617,7 +893,7 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
             if (isPlaying && leftOsc && rightOsc) {
                 leftOsc.frequency.value = frequency;
                 rightOsc.frequency.value = frequency + binauralBeat;
-                
+
                 if (leftChannel && rightChannel) {
                     leftChannel.volume.value = volume;
                     rightChannel.volume.value = volume;
@@ -633,22 +909,22 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
                     await Tone.start();
                     console.log("Tone.js audio context started");
                 }
-                
+
                 if (!isPlaying) {
                     console.log("Setting up oscillators");
                     setupOscillators();
-                    
+
                     console.log(`Starting oscillators: Left=${frequency}Hz, Right=${frequency + binauralBeat}Hz`);
                     leftOsc.start();
                     rightOsc.start();
-                    
+
                     console.log("Oscillators started successfully");
-                    
+
                     toggleBtn.textContent = 'Stop';
                     toggleBtn.className = 'btn-stop';
                     playingIndicator.style.display = 'block';
                     updatePlayingIndicator();
-                    
+
                     // Disable frequency select while playing
                     freq200.disabled = true;
                     freq1000.disabled = true;
@@ -659,27 +935,27 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
                         console.log("Stopping oscillators");
                         leftOsc.stop();
                         rightOsc.stop();
-                        
+
                         // Dispose oscillators and channels
                         leftOsc.dispose();
                         rightOsc.dispose();
                         leftChannel.dispose();
                         rightChannel.dispose();
-                        
+
                         console.log("Oscillators stopped and disposed");
                     }
-                    
+
                     toggleBtn.textContent = 'Start';
                     toggleBtn.className = 'btn-start';
                     playingIndicator.style.display = 'none';
-                    
+
                     // Re-enable frequency select
                     freq200.disabled = false;
                     freq1000.disabled = false;
                     freqCustom.disabled = false;
                     carrierSlider.disabled = false;
                 }
-                
+
                 isPlaying = !isPlaying;
             } catch (error) {
                 console.error("Audio playback error:", error);
@@ -691,25 +967,25 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
         function changeWaveType(type) {
             // Skip if same type or audio is playing
             if (type === waveType || isPlaying) return;
-            
+
             // Update active button
             waveButtons[waveType].classList.remove('active');
             waveButtons[type].classList.add('active');
-            
+
             // Update wave type
             waveType = type;
-            
+
             // Update wave details
             currentWaveTitle.textContent = `Current Wave: ${waveType.charAt(0).toUpperCase() + waveType.slice(1)}`;
             waveDescription.textContent = brainwaveRanges[type].description;
-            
+
             // Update beat slider range
             const range = brainwaveRanges[type];
             beatSlider.min = range.min;
             beatSlider.max = range.max;
             beatMin.textContent = `${range.min} Hz`;
             beatMax.textContent = `${range.max} Hz`;
-            
+
             // Set beat to middle of range
             const middleValue = (range.min + range.max) / 2;
             binauralBeat = parseFloat(middleValue.toFixed(1));
@@ -720,16 +996,16 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
         // Update carrier frequency
         function updateCarrier(newFreq, isCustom = false) {
             if (isPlaying) return;
-            
+
             frequency = newFreq;
             carrierSlider.value = newFreq;
             carrierLabel.textContent = `Carrier Frequency: ${frequency} Hz`;
-            
+
             // Update button states
             freq200.classList.remove('active');
             freq1000.classList.remove('active');
             freqCustom.classList.remove('active');
-            
+
             if (isCustom) {
                 freqCustom.classList.add('active');
                 customRange.style.display = 'block';
@@ -756,10 +1032,10 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
         // Update playing indicator
         function updatePlayingIndicator() {
             if (!playingIndicator) return;
-            
+
             const indicator = playingIndicator.getElementsByClassName('playing-text')[0];
             const details = playingIndicator.getElementsByClassName('playing-details')[0];
-            
+
             indicator.textContent = `Audio playing: ${frequency}Hz carrier with ${binauralBeat.toFixed(1)}Hz binaural beat`;
             details.textContent = `Left ear: ${frequency}Hz | Right ear: ${(frequency + binauralBeat).toFixed(1)}Hz`;
         }
@@ -813,11 +1089,11 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
         // Speech synthesis functions
         function loadVoices() {
             voices = speechSynthesis.getVoices();
-            
+
             if (voices.length > 0) {
                 // Clear dropdown
                 voiceSelect.innerHTML = '';
-                
+
                 // Add voices to select
                 voices.forEach((voice, index) => {
                     const option = document.createElement('option');
@@ -825,17 +1101,17 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
                     option.textContent = `${voice.name} (${voice.lang})`;
                     voiceSelect.appendChild(option);
                 });
-                
+
                 // Try to select an English voice by default
-                let englishVoiceIndex = voices.findIndex(voice => 
+                let englishVoiceIndex = voices.findIndex(voice =>
                     voice.lang.includes('en') && !voice.name.includes('Google'));
-                
+
                 if (englishVoiceIndex === -1) {
                     englishVoiceIndex = 0; // Fallback to first voice
                 }
-                
+
                 voiceSelect.value = englishVoiceIndex;
-                
+
                 // Enable speak button if text is present and audio is playing
                 speakBtn.disabled = !(speechText.value.trim().length > 0 && isPlaying);
                 console.log("Voices loaded:", voices.length);
@@ -843,146 +1119,178 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
                 console.log("No voices available yet");
             }
         }
-        
+
         // Load voices when they change
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
         }
-        
+
         // Start speech
         function startSpeech() {
             try {
-                if (speechSynthesis && !isSpeaking && isPlaying) {
-                    const text = speechText.value.trim();
-                    if (text.length === 0) return;
-                    
-                    // Create utterance
-                    speechUtterance = new SpeechSynthesisUtterance(text);
-                    
-                    // Set voice
-                    const voiceIndex = parseInt(voiceSelect.value);
-                    if (!isNaN(voiceIndex) && voiceIndex >= 0 && voiceIndex < voices.length) {
-                        speechUtterance.voice = voices[voiceIndex];
-                    }
-                    
-                    // Set rate and volume
-                    speechUtterance.rate = speechRate;
-                    speechUtterance.volume = speechVolume;
-                    
-                    // Set up event handlers
-                    speechUtterance.onstart = () => {
-                        isSpeaking = true;
-                        speakBtn.disabled = true;
-                        stopSpeechBtn.disabled = false;
-                        console.log("Speech started");
-                    };
-                    
-                    speechUtterance.onend = () => {
-                        isSpeaking = false;
-                        speakBtn.disabled = false;
-                        stopSpeechBtn.disabled = true;
-                        console.log("Speech ended");
-                    };
-                    
-                    speechUtterance.onerror = (event) => {
-                        console.error("Speech error:", event);
-                        isSpeaking = false;
-                        speakBtn.disabled = false;
-                        stopSpeechBtn.disabled = true;
-                    };
-                    
-                    console.log("Starting speech with voice:", speechUtterance.voice ? speechUtterance.voice.name : "default");
-                    console.log("Text length:", text.length, "characters");
-                    
-                    // Start speaking
-                    window.speechSynthesis.cancel(); // Clear any previous utterances
-                    window.speechSynthesis.speak(speechUtterance);
-                    
-                    // Make sure button states are updated
-                    setTimeout(() => {
-                        if (!isSpeaking) {
-                            // Manual trigger if onstart didn't fire
-                            isSpeaking = true;
-                            speakBtn.disabled = true;
-                            stopSpeechBtn.disabled = false;
-                        }
-                    }, 500);
-                } else {
-                    console.log("Cannot start speech:", 
-                                "speechSynthesis available:", !!speechSynthesis, 
-                                "isSpeaking:", isSpeaking, 
-                                "isPlaying:", isPlaying);
+                console.log("startSpeech called");
+
+                // Force speechSynthesis to be available
+                if (typeof speechSynthesis === 'undefined') {
+                    window.speechSynthesis = window.webkitSpeechSynthesis || window.mozSpeechSynthesis;
+                    console.log("Tried to use alternative speechSynthesis");
                 }
+
+                if (!window.speechSynthesis) {
+                    console.error("Speech synthesis not available in this browser");
+                    alert("Speech synthesis is not supported in your browser");
+                    return;
+                }
+
+                // Get text from textarea
+                const text = document.getElementById('speech-text').value.trim();
+                if (text.length === 0) {
+                    console.log("No text to speak");
+                    return;
+                }
+
+                // Cancel any previous speech
+                window.speechSynthesis.cancel();
+
+                // Create new utterance
+                const utterance = new SpeechSynthesisUtterance(text);
+
+                // Try to set voice
+                try {
+                    const voiceSelect = document.getElementById('voice-select');
+                    const voices = window.speechSynthesis.getVoices();
+                    const voiceIndex = parseInt(voiceSelect.value);
+
+                    if (voices && voices.length > 0 && voiceIndex >= 0 && voiceIndex < voices.length) {
+                        utterance.voice = voices[voiceIndex];
+                        console.log("Set voice to:", voices[voiceIndex].name);
+                    } else {
+                        console.log("Using default voice");
+                    }
+                } catch (e) {
+                    console.error("Error setting voice:", e);
+                }
+
+                // Set rate and volume
+                utterance.rate = parseFloat(document.getElementById('rate-slider').value);
+                utterance.volume = parseFloat(document.getElementById('speech-volume-slider').value);
+
+                console.log("Speaking with rate:", utterance.rate, "volume:", utterance.volume);
+
+                // Set flag and update UI
+                isSpeaking = true;
+                document.getElementById('speak-btn').disabled = true;
+                document.getElementById('stop-speech-btn').disabled = false;
+
+                // Speak!
+                window.speechSynthesis.speak(utterance);
+                console.log("Speech started");
+
+                // Update when finished
+                utterance.onend = function () {
+                    console.log("Speech ended");
+                    isSpeaking = false;
+                    document.getElementById('speak-btn').disabled = false;
+                    document.getElementById('stop-speech-btn').disabled = true;
+                };
+
+                utterance.onerror = function (event) {
+                    console.error("Speech error:", event);
+                    isSpeaking = false;
+                    document.getElementById('speak-btn').disabled = false;
+                    document.getElementById('stop-speech-btn').disabled = true;
+                };
+
+                // Save reference to utterance
+                speechUtterance = utterance;
+
             } catch (error) {
-                console.error("Error starting speech:", error);
-                alert("Speech synthesis error: " + error.message);
+                console.error("Error in startSpeech:", error);
+                alert("Error starting speech: " + error.message);
             }
         }
-        
+
         // Stop speech
         function stopSpeech() {
-            if (speechSynthesis && isSpeaking) {
-                speechSynthesis.cancel();
+            try {
+                console.log("stopSpeech called");
+                window.speechSynthesis.cancel();
                 isSpeaking = false;
-                speakBtn.disabled = false;
-                stopSpeechBtn.disabled = true;
+                document.getElementById('speak-btn').disabled = false;
+                document.getElementById('stop-speech-btn').disabled = true;
+                console.log("Speech stopped");
+            } catch (error) {
+                console.error("Error stopping speech:", error);
             }
         }
-        
-        // Speech control event listeners
-        speechText.addEventListener('input', () => {
-            speakBtn.disabled = speechText.value.trim().length === 0 || !isPlaying;
+
+        // Directly bind the click event for the speech buttons
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('speak-btn').onclick = function () {
+                startSpeech();
+            };
+
+            document.getElementById('stop-speech-btn').onclick = function () {
+                stopSpeech();
+            };
+
+            // Also manually enable the button after binaural starts
+            document.getElementById('toggle-btn').addEventListener('click', function () {
+                setTimeout(function () {
+                    if (isPlaying) {
+                        document.getElementById('speak-btn').disabled = false;
+                    } else {
+                        document.getElementById('speak-btn').disabled = true;
+                    }
+                }, 500);
+            });
+
+            // Check for saved preference
+            const savedDarkMode = localStorage.getItem('binaural-dark-mode');
+            if (savedDarkMode === 'true') {
+                toggleDarkMode(); // This will flip isDarkMode to true
+            }
+
+            // Add click event for theme toggle
+            document.getElementById('theme-toggle').addEventListener('click', toggleDarkMode);
         });
-        
-        speakBtn.addEventListener('click', startSpeech);
-        stopSpeechBtn.addEventListener('click', stopSpeech);
-        
+
+        // Speech parameters
         rateSlider.addEventListener('input', () => {
             speechRate = parseFloat(rateSlider.value);
             rateValue.textContent = speechRate.toFixed(1);
-            
-            if (isSpeaking) {
-                // Restart speech with new rate
-                const currentText = speechUtterance.text;
-                stopSpeech();
-                setTimeout(() => {
-                    speechText.value = currentText;
-                    startSpeech();
-                }, 100);
-            }
         });
-        
+
         speechVolumeSlider.addEventListener('input', () => {
             speechVolume = parseFloat(speechVolumeSlider.value);
             speechVolumeValue.textContent = speechVolume.toFixed(1);
-            
-            if (isSpeaking && speechUtterance) {
-                speechUtterance.volume = speechVolume;
-            }
         });
-        
+
         // Update speech button state when audio starts/stops
         const updateSpeechButtonState = () => {
-            speakBtn.disabled = !isPlaying || speechText.value.trim().length === 0;
+            if (speakBtn) {
+                speakBtn.disabled = !isPlaying;
+                console.log("Updated speak button state: disabled =", !isPlaying);
+            }
             if (!isPlaying && isSpeaking) {
                 stopSpeech();
             }
         };
-        
+
         // Add the sample script to the textarea
         speechText.value = sampleScript;
-        
+
         // Add speech button update to toggle play
         const originalTogglePlay = togglePlay;
-        togglePlay = async function() {
+        togglePlay = async function () {
             await originalTogglePlay.call(this);
             updateSpeechButtonState();
         };
-        
+
         // Initialize UI
         updateBeatLabel();
         updateVolumeLabel();
-        
+
         // Load voices initially
         setTimeout(() => {
             loadVoices();
@@ -993,4 +1301,5 @@ Allow yourself to drift into peaceful sleep if that's your intention... or to ge
         }, 100);
     </script>
 </body>
+
 </html>
