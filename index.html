@@ -1,5 +1,5 @@
- <!-- Add a simple fallback button as a guaranteed way to activate speech -->
- <script>
+<!-- Add a simple fallback button as a guaranteed way to activate speech -->
+<script>
     // Emergency speech function - can be called from console if needed
     function emergencySpeech() {
         try {
@@ -15,7 +15,7 @@
         }
     }
 
-    
+
     // Dark mode toggle function (single definition)
     let isDarkMode = false;
     function toggleDarkMode() {
@@ -59,7 +59,7 @@
         });
     });
 
-    
+
     // --- Speech synthesis functions ---
     function loadVoices() {
         voices = speechSynthesis.getVoices();
@@ -86,7 +86,7 @@
     if (speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = loadVoices;
     }
-    
+
     function startSpeech() {
         try {
             console.log("startSpeech called");
@@ -145,7 +145,7 @@
             alert("Error starting speech: " + error.message);
         }
     }
-    
+
     function stopSpeech() {
         try {
             console.log("stopSpeech called");
@@ -171,7 +171,7 @@
 <html lang="en">
 
 <head>
-    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brainwave Binaural Generator</title>
@@ -701,7 +701,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="playing-indicator" class="playing-indicator">
             <p class="playing-text">Audio playing: 200Hz carrier with 6.0Hz binaural beat</p>
             <p class="playing-details">Left ear: 200Hz | Right ear: 206Hz</p>
@@ -709,8 +709,8 @@
         </div>
         <h2 class="info-title" id="current-wave-title">Current Wave: Theta</h2>
         <div class="info-panel">
-        <p class="info-description" id="wave-description">Deep meditation, REM sleep, creativity</p>
-        
+            <p class="info-description" id="wave-description">Deep meditation, REM sleep, creativity</p>
+
             <h3 class="info-subtitle">How to Use</h3>
             <ul class="info-list">
                 <li><strong>HEADPHONES REQUIRED</strong> - binaural beats only work with stereo headphones</li>
@@ -745,6 +745,11 @@
     </div>
 
     <script>
+        // Add this at the end of your script
+        document.getElementById('speak-btn').onclick = function () {
+            console.log("Direct click handler");
+            startSpeech();
+        };
         // Sample hypnosis script - can be used as default
         const sampleScript = `
 Begin by finding a comfortable position in your bed. As you lie down, close your eyes and take a deep, slow breath in… and exhale gently. Let your body begin to relax with each breath. With every inhale, imagine drawing in peaceful, healing energy; with every exhale, feel tension and stress melt away. Notice how your body feels heavier and more relaxed with each passing moment.
@@ -1313,6 +1318,7 @@ Take one final deep breath, exhale slowly, and as the theta waves of this soundt
             }
         }, 100);
     </script>
+
 </body>
 
 </html>
