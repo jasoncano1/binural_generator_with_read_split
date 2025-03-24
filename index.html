@@ -159,9 +159,7 @@
         }
     }
 
-    // --- (Other functions for Tone.js oscillators, event listeners, etc remain unchanged) ---
 </script>
-<!-- Add a hidden button that can be shown via console if everything else fails -->
 <button id="emergency-speech" onclick="emergencySpeech()" style="display: none; position: fixed; bottom: 10px; right: 10px; z-index: 9999; 
                    background-color: red; color: white; padding: 10px; border: none; border-radius: 5px;">
     Emergency Speech
@@ -268,6 +266,33 @@
             font-size: 1.2rem;
             padding: 0;
             transition: background-color 0.2s;
+        }
+
+        .script-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .script-btn {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .script-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .script-btn:hover:not(.active) {
+            background-color: #d1d5db;
         }
 
         .btn-theme:hover {
@@ -626,6 +651,10 @@
 
         <div id="speech-panel" class="speech-panel">
             <h3 class="speech-title">Custom Hypnosis Script</h3>
+            <div class="script-buttons">
+                <button id="day-script-btn" class="script-btn active">Day Script</button>
+                <button id="night-script-btn" class="script-btn">Night Script</button>
+            </div>
             <textarea id="speech-text" class="speech-textarea"
                 placeholder="Enter your custom hypnosis script here. It will be read aloud over the binaural beats. You can paste in the quantum coding script or write your own affirmations."></textarea>
             <div class="speech-controls">
@@ -1307,7 +1336,87 @@ You are loved, supported, and infinitely blessed. Sleep now, Jason, and awaken t
             }
         }, 100);
     </script>
+    <script>
+        // Day and night scripts
+        const dayScript = `This is your daytime script for focus, motivation, and energy.
 
+Begin by taking a comfortable seated position. Close your eyes and take a deep breath in... and slowly exhale. Feel your body becoming alert and your mind becoming clear with each breath. 
+
+As you continue to breathe naturally, imagine a bright, golden light surrounding you. This light represents pure energy, clarity, and focus. With each breath, you draw this energizing light into your body.
+
+Visualize yourself accomplishing your goals for today with ease and confidence. See yourself working efficiently, thinking clearly, and making excellent decisions. You have all the skills and resources you need to succeed.
+
+Repeat these powerful affirmations in your mind:
+"I am focused, alert, and energized."
+"My mind is clear and my thoughts are organized."
+"I accomplish my tasks efficiently and effectively."
+"I make wise decisions that serve my highest good."
+"I am productive and motivated throughout the day."
+
+Feel these affirmations resonate within you, programming your subconscious mind for success. You are now prepared to take inspired action toward your goals.
+
+Your unique talents in robotics are activated and flowing freely. Imagine innovative ideas coming to you effortlessly, technical challenges solving themselves in your mind. Creative solutions emerge naturally because you are in a state of perfect focus and flow.
+
+Picture yourself excelling in your projects, seeing opportunities where others see obstacles. Your analytical mind works in harmony with your intuition, giving you an unbeatable advantage.
+
+As you prepare to open your eyes, know that this state of alert focus remains with you. You'll move through your day with purpose, energy, and clear direction. You'll remain centered even when faced with challenges, and you'll accomplish your goals with confidence and ease.
+
+Take a deep breath in, and as you exhale, open your eyes, ready to embrace your day with focus, clarity, and purpose.`;
+
+        const nightScript = `Begin by finding a comfortable position in your bed. As you lie down, close your eyes and take a deep, slow breath in… and exhale gently. Let your body begin to relax with each breath. With every inhale, imagine drawing in peaceful, healing energy; with every exhale, feel tension and stress melt away. Notice how your body feels heavier and more relaxed with each passing moment.
+
+Allow your muscles—from the crown of your head down to your toes—to soften and release. Picture a warm, soothing light gently flowing over you, calming your mind and body. You are safe, you are relaxed, and you are ready to journey into a deep state of restorative sleep.
+
+Now, envision the infinite quantum universe around you—a boundless field of energy and possibility. Imagine tiny shimmering particles of light that represent every aspect of healing and transformation. As you float in this vast expanse, sense that each particle is imbued with the power of self-healing. They are here to nurture every cell of your body, repairing and rejuvenating you at the most profound level.
+
+Feel these quantum energies gently infusing every fiber of your being. With each breath, you draw in these healing vibrations that restore balance, vitality, and strength. Visualize these particles gathering around you, forming a luminous cocoon that protects and energizes your body and mind. In this sacred space, you are aligned with the universe's eternal power to heal and transform.
+
+Now, let your mind embrace the positive affirmations designed to nurture your sobriety and joy. In this serene state, repeat silently to yourself:
+
+"I am strong, centered, and completely capable of living a sober life."
+"Every day, I choose clarity, balance, and wellness."
+"I embrace my inner power, knowing that I deserve a life filled with happiness and abundance."
+"I nurture my heart, and I attract a loving, supportive marriage that celebrates mutual growth and joy."
+Allow these affirmations to settle deep within your subconscious, anchoring your intentions for a healthy, balanced, and happy life. Trust that these words are seeds of positive change, sprouting resilience and transforming your inner world.
+
+Now, shift your focus to your unique talents in robotics. Imagine a clear, radiant vision of your future self—a visionary innovator using your god-given talents to create breakthroughs in robotics. Picture a dynamic workshop where creativity meets precision, where each new idea is celebrated and nurtured.
+
+See yourself effortlessly manifesting innovative designs and groundbreaking solutions. Feel the excitement and satisfaction of using your skills to improve lives, transforming challenges into opportunities. Let this vision fill you with a sense of purpose, knowing that every step you take is guided by your innate genius and passion. You are a creator, a pioneer, and every moment of your life reinforces your commitment to your craft.
+
+As these visions and affirmations merge into your consciousness, feel a profound sense of unity and purpose. The healing quantum energy surrounds you, the affirmations solidify your resolve, and your creative vision in robotics sparks inspiration. In this perfect balance, you are ready to drift into a deep, restorative sleep.
+
+Now, let go of any lingering thoughts. Allow your body and mind to surrender completely to sleep, knowing that the positive energy, healing, and inspiration will continue to work within you as you rest. Your subconscious mind is absorbing these messages, ensuring that you awaken renewed, empowered, and ready to manifest your brightest future.
+
+Take one final deep breath, exhale slowly, and as the theta waves of this soundtrack cradle your mind, let your awareness dissolve into the peaceful rhythm of sleep. Good night, and may you awaken with renewed strength and purpose.`;
+
+        // Add event listeners when the document is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get the script buttons and textarea
+            const dayScriptBtn = document.getElementById('day-script-btn');
+            const nightScriptBtn = document.getElementById('night-script-btn');
+            const speechText = document.getElementById('speech-text');
+
+            // Set initial script (night script since it's what you had before)
+            speechText.value = nightScript;
+
+            // Add click event for day script
+            dayScriptBtn.addEventListener('click', function () {
+                speechText.value = dayScript;
+                dayScriptBtn.classList.add('active');
+                nightScriptBtn.classList.remove('active');
+            });
+
+            // Add click event for night script
+            nightScriptBtn.addEventListener('click', function () {
+                speechText.value = nightScript;
+                nightScriptBtn.classList.add('active');
+                dayScriptBtn.classList.remove('active');
+            });
+
+            // Make sure other event listeners are still working
+            // The rest of your DOMContentLoaded events here...
+        });
+    </script>
 </body>
 
 </html>
