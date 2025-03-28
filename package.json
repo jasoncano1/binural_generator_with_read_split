@@ -3,7 +3,21 @@
     "version": "1.0.0",
     "main": "server.js",
     "scripts": {
-      "start": "node server.js"
+        "start": "node server.js"
+    },
+    "description": "A standalone HTML application for generating binaural beats across different brainwave frequencies with integrated spoken hypnosis capabilities.",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jasoncano1/binural_generator_with_readover.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/jasoncano1/binural_generator_with_readover/issues"
+    },
+    "homepage": "https://github.com/jasoncano1/binural_generator_with_readover#readme",
+    "dependencies": {
+        "express": "^4.21.2"
     }
-  }
-  
+}
