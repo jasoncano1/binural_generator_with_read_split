@@ -47,6 +47,7 @@
             stopSpeech();
         };
 
+
         // Enable the speak button shortly after audio toggle
         document.getElementById('toggle-btn').addEventListener('click', function () {
             setTimeout(function () {
@@ -254,6 +255,33 @@
             align-items: center;
         }
 
+        .script-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .script-btn {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .script-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .script-btn:hover:not(.active) {
+            background-color: #d1d5db;
+        }
+
         .btn-theme {
             background-color: transparent;
             color: var(--text-color);
@@ -275,6 +303,20 @@
         }
 
         /* Speech Panel Styles */
+
+        .speech-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .speech-checkbox input {
+            cursor: pointer;
+        }
+
         .speech-panel {
             margin-top: 20px;
             margin-bottom: 20px;
@@ -487,7 +529,7 @@
             background-color: #e5e7eb;
             border-radius: 999px;
             outline: none;
-            -webkit-appearance: none;
+            /* -webkit-appearance: none; */
         }
 
         input[type="range"]::-webkit-slider-thumb {
@@ -626,12 +668,21 @@
 
         <div id="speech-panel" class="speech-panel">
             <h3 class="speech-title">Custom Hypnosis Script</h3>
+            <div class="script-buttons">
+                <button id="day-script-btn" class="script-btn active">Day Script</button>
+                <button id="night-script-btn" class="script-btn">Night Script</button>
+            </div>
             <textarea id="speech-text" class="speech-textarea"
                 placeholder="Enter your custom hypnosis script here. It will be read aloud over the binaural beats. You can paste in the quantum coding script or write your own affirmations."></textarea>
             <div class="speech-controls">
                 <button id="speak-btn" class="btn-speech">Read Script</button>
                 <button id="stop-speech-btn" class="btn-speech-stop" disabled>Stop Reading</button>
                 <div class="speech-options">
+                    <label class="speech-checkbox">
+                        <input type="checkbox" id="loop-speech-checkbox">
+                        Loop Speech
+                    </label>
+
                     <label class="speech-label">
                         Voice:
                         <select id="voice-select" class="speech-select">
@@ -750,59 +801,25 @@
             console.log("Direct click handler");
             startSpeech();
         };
+
+        let loopSpeech = false;
+
         // Sample hypnosis script - can be used as default
         const sampleScript = `
-Begin by finding a comfortable position in your bed. As you lie down, close your eyes and take a deep, slow breath in… and exhale gently. Let your body begin to relax with each breath. With every inhale, imagine drawing in peaceful, healing energy; with every exhale, feel tension and stress melt away. Notice how your body feels heavier and more relaxed with each passing moment.
-
-Allow your muscles—from the crown of your head down to your toes—to soften and release. Picture a warm, soothing light gently flowing over you, calming your mind and body. You are safe, you are relaxed, and you are ready to journey into a deep state of restorative sleep.
-
-Now, envision the infinite quantum universe around you—a boundless field of energy and possibility. Imagine tiny shimmering particles of light that represent every aspect of healing and transformation. As you float in this vast expanse, sense that each particle is imbued with the power of self-healing. They are here to nurture every cell of your body, repairing and rejuvenating you at the most profound level.
-
-Feel these quantum energies gently infusing every fiber of your being. With each breath, you draw in these healing vibrations that restore balance, vitality, and strength. Visualize these particles gathering around you, forming a luminous cocoon that protects and energizes your body and mind. In this sacred space, you are aligned with the universe’s eternal power to heal and transform.
-
-Now, let your mind embrace the positive affirmations designed to nurture your sobriety and joy. In this serene state, repeat silently to yourself:
-
-“I am strong, centered, and completely capable of living a sober life.”
-“Every day, I choose clarity, balance, and wellness.”
-“I embrace my inner power, knowing that I deserve a life filled with happiness and abundance.”
-“I nurture my heart, and I attract a loving, supportive marriage that celebrates mutual growth and joy.”
-Allow these affirmations to settle deep within your subconscious, anchoring your intentions for a healthy, balanced, and happy life. Trust that these words are seeds of positive change, sprouting resilience and transforming your inner world.
-
-Now, shift your focus to your unique talents in robotics. Imagine a clear, radiant vision of your future self—a visionary innovator using your god-given talents to create breakthroughs in robotics. Picture a dynamic workshop where creativity meets precision, where each new idea is celebrated and nurtured.
-
-See yourself effortlessly manifesting innovative designs and groundbreaking solutions. Feel the excitement and satisfaction of using your skills to improve lives, transforming challenges into opportunities. Let this vision fill you with a sense of purpose, knowing that every step you take is guided by your innate genius and passion. You are a creator, a pioneer, and every moment of your life reinforces your commitment to your craft.
-
-As these visions and affirmations merge into your consciousness, feel a profound sense of unity and purpose. The healing quantum energy surrounds you, the affirmations solidify your resolve, and your creative vision in robotics sparks inspiration. In this perfect balance, you are ready to drift into a deep, restorative sleep.
-
-Now, let go of any lingering thoughts. Allow your body and mind to surrender completely to sleep, knowing that the positive energy, healing, and inspiration will continue to work within you as you rest. Your subconscious mind is absorbing these messages, ensuring that you awaken renewed, empowered, and ready to manifest your brightest future.
-
-Take one final deep breath, exhale slowly, and as the theta waves of this soundtrack cradle your mind, let your awareness dissolve into the peaceful rhythm of sleep. Good night, and may you awaken with renewed strength and purpose.
-
-Begin by finding a comfortable position in your bed. As you lie down, close your eyes and take a deep, slow breath in… and exhale gently. Let your body begin to relax with each breath. With every inhale, imagine drawing in peaceful, healing energy; with every exhale, feel tension and stress melt away. Notice how your body feels heavier and more relaxed with each passing moment.
-
-Allow your muscles—from the crown of your head down to your toes—to soften and release. Picture a warm, soothing light gently flowing over you, calming your mind and body. You are safe, you are relaxed, and you are ready to journey into a deep state of restorative sleep.
-
-Now, envision the infinite quantum universe around you—a boundless field of energy and possibility. Imagine tiny shimmering particles of light that represent every aspect of healing and transformation. As you float in this vast expanse, sense that each particle is imbued with the power of self-healing. They are here to nurture every cell of your body, repairing and rejuvenating you at the most profound level.
-
-Feel these quantum energies gently infusing every fiber of your being. With each breath, you draw in these healing vibrations that restore balance, vitality, and strength. Visualize these particles gathering around you, forming a luminous cocoon that protects and energizes your body and mind. In this sacred space, you are aligned with the universe’s eternal power to heal and transform.
-
-Now, let your mind embrace the positive affirmations designed to nurture your sobriety and joy. In this serene state, repeat silently to yourself:
-
-“I am strong, centered, and completely capable of living a sober life.”
-“Every day, I choose clarity, balance, and wellness.”
-“I embrace my inner power, knowing that I deserve a life filled with happiness and abundance.”
-“I nurture my heart, and I attract a loving, supportive marriage that celebrates mutual growth and joy.”
-Allow these affirmations to settle deep within your subconscious, anchoring your intentions for a healthy, balanced, and happy life. Trust that these words are seeds of positive change, sprouting resilience and transforming your inner world.
-
-Now, shift your focus to your unique talents in robotics. Imagine a clear, radiant vision of your future self—a visionary innovator using your god-given talents to create breakthroughs in robotics. Picture a dynamic workshop where creativity meets precision, where each new idea is celebrated and nurtured.
-
-See yourself effortlessly manifesting innovative designs and groundbreaking solutions. Feel the excitement and satisfaction of using your skills to improve lives, transforming challenges into opportunities. Let this vision fill you with a sense of purpose, knowing that every step you take is guided by your innate genius and passion. You are a creator, a pioneer, and every moment of your life reinforces your commitment to your craft.
-
-As these visions and affirmations merge into your consciousness, feel a profound sense of unity and purpose. The healing quantum energy surrounds you, the affirmations solidify your resolve, and your creative vision in robotics sparks inspiration. In this perfect balance, you are ready to drift into a deep, restorative sleep.
-
-Now, let go of any lingering thoughts. Allow your body and mind to surrender completely to sleep, knowing that the positive energy, healing, and inspiration will continue to work within you as you rest. Your subconscious mind is absorbing these messages, ensuring that you awaken renewed, empowered, and ready to manifest your brightest future.
-
-Take one final deep breath, exhale slowly, and as the theta waves of this soundtrack cradle your mind, let your awareness dissolve into the peaceful rhythm of sleep. Good night, and may you awaken with renewed strength and purpose.`;
+Begin by settling into a comfortable seated or reclining position. Gently close your eyes, allowing yourself to relax deeply and fully. Notice the gentle rhythm of your breathing—each inhale bringing refreshing energy, each exhale releasing any lingering tension or distractions. Feel your mind becoming clear, open, and receptive.
+Now, deepen your relaxation by focusing on each part of your body. Start with your toes, feeling them loosen and relax. Move up to your feet, ankles, calves, and thighs, allowing any tension to dissolve. Feel the warmth spreading through your hips, abdomen, and chest, each breath bringing a sense of calm. Let your shoulders drop, releasing any tightness, and feel the relaxation extend down your arms, through your hands, and to your fingertips. Allow your neck and jaw to relax, softening the muscles around your face. Finally, let your scalp and forehead smooth out, feeling your entire body sink into a state of profound tranquility.
+Imagine yourself at the threshold of your conscious mind and the boundless quantum universe created by God—a place filled with endless opportunities and vibrant creativity. Visualize shimmering particles of light, each a unique hue, dancing around you, each representing infinite possibilities, healing energies, and profound inspiration. Feel these particles gently touching your skin, energizing your body, clearing your mind, and deeply aligning you with your higher purpose. Notice how these particles weave together, forming intricate patterns of light and energy, each pattern a pathway to new insights and discoveries.
+Sense these quantum particles activating your mind and awakening profound insights, clarity, and creativity. Imagine vividly your passion for robotics, electronics, and innovative technology coming to life. See yourself effortlessly merging your understanding of the quantum universe with practical designs and projects that profoundly benefit others. Clearly visualize a workshop filled with advanced tools, circuits, sensors, and robots—each representing your inspired ideas and innovative spirit. Imagine the soft hum of machinery, the gentle glow of circuit boards, and the smooth movements of robotic arms, all guided by your intuitive understanding of the quantum field. See yourself collaborating with like-minded individuals, sharing ideas and building something truly extraordinary.
+Now, expand your vision. Imagine not just the workshop, but the applications of your creations. See your robots assisting in healthcare, performing delicate surgeries with unparalleled precision. Visualize your electronic devices enhancing communication for those with disabilities, bridging gaps and fostering connection. See your innovative technologies contributing to sustainable energy solutions, harmonizing technology with nature.
+Silently affirm:
+“I am divinely guided, connected deeply with infinite wisdom and creativity.”
+“My mind effortlessly generates brilliant, innovative solutions and breakthroughs, drawing from the infinite wellspring of the quantum universe.”
+“I confidently and passionately create transformative technologies for myself and others, driven by a deep sense of purpose and divine inspiration.”
+“I joyfully explore God’s quantum universe, unlocking profound insights and truths, and translating them into tangible, positive change.”
+“I am a conduit for divine innovation, bringing forth solutions that uplift and empower humanity.”
+“My creations are infused with the harmonious energies of the quantum field, fostering healing and growth.”
+Allow these affirmations to deeply resonate within your subconscious mind, filling you with excitement, joy, and confidence. Clearly feel yourself living your purpose, creating meaningful solutions, and experiencing deep satisfaction in your daily life. Feel the profound sense of connection to the divine, knowing you are a vital part of a grand, interconnected universe.
+When you’re ready, gently bring your awareness back to the present moment, feeling refreshed, alert, energized, and deeply aligned with your purpose and potential. Take a few deep breaths, wiggle your fingers and toes, and open your eyes, carrying the clarity and inspiration with you throughout your day.`;
 
         // Brainwave frequency ranges and descriptions
         const brainwaveRanges = {
@@ -1317,6 +1334,183 @@ Take one final deep breath, exhale slowly, and as the theta waves of this soundt
                 setTimeout(loadVoices, 1000);
             }
         }, 100);
+
+        const dayScript = `Begin by settling into a comfortable seated or reclining position. Gently close your eyes, allowing yourself to relax deeply and fully. Notice the gentle rhythm of your breathing—each inhale bringing refreshing energy, each exhale releasing any lingering tension or distractions. Feel your mind becoming clear, open, and receptive.
+Now, deepen your relaxation by focusing on each part of your body. Start with your toes, feeling them loosen and relax. Move up to your feet, ankles, calves, and thighs, allowing any tension to dissolve. Feel the warmth spreading through your hips, abdomen, and chest, each breath bringing a sense of calm. Let your shoulders drop, releasing any tightness, and feel the relaxation extend down your arms, through your hands, and to your fingertips. Allow your neck and jaw to relax, softening the muscles around your face. Finally, let your scalp and forehead smooth out, feeling your entire body sink into a state of profound tranquility.
+Imagine yourself at the threshold of your conscious mind and the boundless quantum universe created by God—a place filled with endless opportunities and vibrant creativity. Visualize shimmering particles of light, each a unique hue, dancing around you, each representing infinite possibilities, healing energies, and profound inspiration. Feel these particles gently touching your skin, energizing your body, clearing your mind, and deeply aligning you with your higher purpose. Notice how these particles weave together, forming intricate patterns of light and energy, each pattern a pathway to new insights and discoveries.
+Sense these quantum particles activating your mind and awakening profound insights, clarity, and creativity. Imagine vividly your passion for robotics, electronics, and innovative technology coming to life. See yourself effortlessly merging your understanding of the quantum universe with practical designs and projects that profoundly benefit others. Clearly visualize a workshop filled with advanced tools, circuits, sensors, and robots—each representing your inspired ideas and innovative spirit. Imagine the soft hum of machinery, the gentle glow of circuit boards, and the smooth movements of robotic arms, all guided by your intuitive understanding of the quantum field. See yourself collaborating with like-minded individuals, sharing ideas and building something truly extraordinary.
+Now, expand your vision. Imagine not just the workshop, but the applications of your creations. See your robots assisting in healthcare, performing delicate surgeries with unparalleled precision. Visualize your electronic devices enhancing communication for those with disabilities, bridging gaps and fostering connection. See your innovative technologies contributing to sustainable energy solutions, harmonizing technology with nature.
+Silently affirm:
+“I am divinely guided, connected deeply with infinite wisdom and creativity.”
+“My mind effortlessly generates brilliant, innovative solutions and breakthroughs, drawing from the infinite wellspring of the quantum universe.”
+“I confidently and passionately create transformative technologies for myself and others, driven by a deep sense of purpose and divine inspiration.”
+“I joyfully explore God’s quantum universe, unlocking profound insights and truths, and translating them into tangible, positive change.”
+“I am a conduit for divine innovation, bringing forth solutions that uplift and empower humanity.”
+“My creations are infused with the harmonious energies of the quantum field, fostering healing and growth.”
+Allow these affirmations to deeply resonate within your subconscious mind, filling you with excitement, joy, and confidence. Clearly feel yourself living your purpose, creating meaningful solutions, and experiencing deep satisfaction in your daily life. Feel the profound sense of connection to the divine, knowing you are a vital part of a grand, interconnected universe.
+When you’re ready, gently bring your awareness back to the present moment, feeling refreshed, alert, energized, and deeply aligned with your purpose and potential. Take a few deep breaths, wiggle your fingers and toes, and open your eyes, carrying the clarity and inspiration with you throughout your day.`;
+
+        const nightScript = `Settle comfortably into your bed, gently close your eyes, and allow your body to begin relaxing deeply. Take slow, deep breaths, noticing each inhale soothing and calming your mind, and each exhale releasing stress, tension, or worries from your day. Allow a sense of calmness and peace to gently envelop you.
+Now, deepen your relaxation by focusing on your body. Feel the weight of your body sinking into the mattress, allowing all tension to melt away. Imagine a warm, soothing light flowing through your body, starting at your toes and moving up, relaxing each muscle, each cell, each fiber. Feel the warmth spreading through your legs, your abdomen, your chest, and your arms. Let your neck and shoulders relax, allowing your head to rest comfortably. Feel the muscles of your face soften, and your eyelids grow heavy.
+Picture yourself gently floating into an infinite expanse of soft, comforting quantum energy—a loving creation by God, filled with limitless possibilities and profound healing frequencies. Visualize countless shimmering particles of gentle, healing light surrounding you, effortlessly nurturing and repairing every part of your body, mind, and spirit. See these particles as tiny, intelligent messengers, each carrying divine love and healing energy.
+Feel these quantum particles gently entering your body, healing and restoring you at the deepest cellular levels. Imagine this restorative energy forming a protective cocoon around you, deeply comforting and soothing as you drift further into profound relaxation. Sense your interconnectedness with the quantum field and the divine presence, feeling completely safe, secure, and deeply loved by God and the universe. Imagine this quantum field as a vast, loving ocean, gently cradling you, supporting you, and nourishing you.
+Allow your subconscious mind to softly open, effortlessly absorbing the gentle wisdom, clarity, and nurturing frequencies of this quantum universe. Feel yourself effortlessly connecting with God’s infinite intelligence and unconditional love, experiencing a profound sense of peace and clarity. Imagine your mind like a clear, tranquil lake, reflecting the infinite beauty and wisdom of the cosmos.
+Silently affirm:
+“I am profoundly connected to the infinite love, wisdom, and healing of God, and I trust in the divine process of restoration.”
+“Every night my body restores, heals, and grows stronger, guided by divine intelligence, and I awaken renewed and revitalized.”
+“I deeply embrace my passion for robotics and innovation, receiving divine inspiration effortlessly, and my dreams are filled with creative solutions.”
+“My dreams clearly guide me to build transformative devices that uplift myself and others, contributing to a world of harmony and well-being.”
+“As I sleep, I integrate the profound insights of the quantum universe, transforming my dreams into tangible realities.”
+“I release all worries and anxieties, trusting in the divine guidance that leads me to my highest potential.”
+Visualize vividly the joyful fulfillment of your highest potential: creating groundbreaking technological solutions, deepening your understanding of quantum principles, and nurturing loving, supportive relationships. Imagine yourself surrounded by the warmth and appreciation of those you have helped. Allow these visions and affirmations to settle deeply within your subconscious, empowering you through the night.
+Surrender fully to restful sleep, knowing your subconscious mind continues gently healing, harmonizing, and guiding you toward your highest good. Good night, and awaken renewed—deeply connected to divine wisdom, clarity, and inspiration. Allow the quantum energy to continue its work throughout the night, ensuring a peaceful and restorative sleep.`;
+
+        // Add event listeners when the document is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get the script buttons and textarea
+            const dayScriptBtn = document.getElementById('day-script-btn');
+            const nightScriptBtn = document.getElementById('night-script-btn');
+            const speechText = document.getElementById('speech-text');
+
+            // Set initial script (night script since it's what you had before)
+            speechText.value = nightScript;
+
+            // Add click event for day script
+            dayScriptBtn.addEventListener('click', function () {
+                speechText.value = dayScript;
+                dayScriptBtn.classList.add('active');
+                nightScriptBtn.classList.remove('active');
+            });
+
+            // Add click event for night script
+            nightScriptBtn.addEventListener('click', function () {
+                speechText.value = nightScript;
+                nightScriptBtn.classList.add('active');
+                dayScriptBtn.classList.remove('active');
+            });
+
+            // Make sure other event listeners are still working
+            // The rest of your DOMContentLoaded events here...
+        });
+
+        // Add this to your DOMContentLoaded event listener
+        document.addEventListener('DOMContentLoaded', function () {
+            // ... your existing code ...
+
+            // Add loop checkbox event listener
+            const loopCheckbox = document.getElementById('loop-speech-checkbox');
+            loopCheckbox.addEventListener('change', function () {
+                loopSpeech = this.checked;
+                console.log("Speech loop set to:", loopSpeech);
+            });
+        });
+
+        // Modify the startSpeech function to handle looping
+        function startSpeech() {
+            try {
+                console.log("startSpeech called");
+
+                // Force speechSynthesis to be available
+                if (typeof speechSynthesis === 'undefined') {
+                    window.speechSynthesis = window.webkitSpeechSynthesis || window.mozSpeechSynthesis;
+                    console.log("Tried to use alternative speechSynthesis");
+                }
+
+                if (!window.speechSynthesis) {
+                    console.error("Speech synthesis not available in this browser");
+                    alert("Speech synthesis is not supported in your browser");
+                    return;
+                }
+
+                // Get text from textarea
+                const text = document.getElementById('speech-text').value.trim();
+                if (text.length === 0) {
+                    console.log("No text to speak");
+                    return;
+                }
+
+                // Cancel any previous speech
+                window.speechSynthesis.cancel();
+
+                // Create new utterance
+                const utterance = new SpeechSynthesisUtterance(text);
+
+                // Try to set voice
+                try {
+                    const voiceSelect = document.getElementById('voice-select');
+                    const voices = window.speechSynthesis.getVoices();
+                    const voiceIndex = parseInt(voiceSelect.value);
+
+                    if (voices && voices.length > 0 && voiceIndex >= 0 && voiceIndex < voices.length) {
+                        utterance.voice = voices[voiceIndex];
+                        console.log("Set voice to:", voices[voiceIndex].name);
+                    } else {
+                        console.log("Using default voice");
+                    }
+                } catch (e) {
+                    console.error("Error setting voice:", e);
+                }
+
+                // Set rate and volume
+                utterance.rate = parseFloat(document.getElementById('rate-slider').value);
+                utterance.volume = parseFloat(document.getElementById('speech-volume-slider').value);
+
+                console.log("Speaking with rate:", utterance.rate, "volume:", utterance.volume);
+
+                // Set flag and update UI
+                isSpeaking = true;
+                document.getElementById('speak-btn').disabled = true;
+                document.getElementById('stop-speech-btn').disabled = false;
+
+                // Speak!
+                window.speechSynthesis.speak(utterance);
+                console.log("Speech started");
+
+                // Update when finished - with looping support
+                utterance.onend = function () {
+                    console.log("Speech ended");
+
+                    // If looping is enabled, start the speech again
+                    if (loopSpeech) {
+                        console.log("Looping speech...");
+                        // Brief timeout to prevent browser speech synthesis issues
+                        setTimeout(startSpeech, 100);
+                    } else {
+                        isSpeaking = false;
+                        document.getElementById('speak-btn').disabled = false;
+                        document.getElementById('stop-speech-btn').disabled = true;
+                    }
+                };
+
+                utterance.onerror = function (event) {
+                    console.error("Speech error:", event);
+                    isSpeaking = false;
+                    document.getElementById('speak-btn').disabled = false;
+                    document.getElementById('stop-speech-btn').disabled = true;
+                };
+
+                // Save reference to utterance
+                speechUtterance = utterance;
+
+            } catch (error) {
+                console.error("Error in startSpeech:", error);
+                alert("Error starting speech: " + error.message);
+            }
+        }
+
+        // Modify the stopSpeech function to handle looping
+        function stopSpeech() {
+            try {
+                console.log("stopSpeech called");
+                window.speechSynthesis.cancel();
+                isSpeaking = false;
+                document.getElementById('speak-btn').disabled = false;
+                document.getElementById('stop-speech-btn').disabled = true;
+                console.log("Speech stopped");
+            } catch (error) {
+                console.error("Error stopping speech:", error);
+            }
+        }
     </script>
 
 </body>
